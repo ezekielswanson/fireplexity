@@ -32,16 +32,22 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ messages, sources, followUpQuestions, searchStatus, isLoading, input, handleInputChange, handleSubmit, messageData, currentTicker }: ChatInterfaceProps) {
+  const [theme] = useState<'light' | 'dark'>('light')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+  const isWaitingForResponse = isLoading && messages[messages.length - 1]?.role === 'user'
   
-  // Simple theme detection based on document class
-  const theme = typeof window !== 'undefined' && document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+  // Helper function to convert protocol-relative URLs to absolute URLs
+  const normalizeImageUrl = (url: string): string => {
+    if (url.startsWith('//')) {
+      return 'https:' + url
+    }
+    return url
+  }
   
   // Extract the current query and check if we're waiting for response
   let query = ''
-  let isWaitingForResponse = false
   
   if (messages.length > 0) {
     const lastMessage = messages[messages.length - 1]
@@ -50,11 +56,9 @@ export function ChatInterface({ messages, sources, followUpQuestions, searchStat
     if (lastMessage.role === 'user') {
       // Waiting for response to this user message
       query = lastMessage.content
-      isWaitingForResponse = true
     } else if (secondLastMessage?.role === 'user' && lastMessage.role === 'assistant') {
       // Current conversation pair
       query = secondLastMessage.content
-      isWaitingForResponse = false
     }
   }
 
@@ -183,7 +187,7 @@ export function ChatInterface({ messages, sources, followUpQuestions, searchStat
                                       <div key={idx} className="w-5 h-5 bg-white dark:bg-zinc-700 rounded-full flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-600">
                                         {result.favicon ? (
                                           <Image
-                                            src={result.favicon}
+                                            src={normalizeImageUrl(result.favicon)}
                                             alt=""
                                             width={16}
                                             height={16}
@@ -222,7 +226,7 @@ export function ChatInterface({ messages, sources, followUpQuestions, searchStat
                                   {result.image && (
                                     <div className="absolute inset-0">
                                       <Image
-                                        src={result.image}
+                                        src={normalizeImageUrl(result.image)}
                                         alt=""
                                         fill
                                         sizes="(max-width: 640px) 20vw, (max-width: 1024px) 16vw, 12vw"
@@ -245,7 +249,7 @@ export function ChatInterface({ messages, sources, followUpQuestions, searchStat
                                       <div className="flex-shrink-0 w-4 h-4 bg-white/80 dark:bg-zinc-700/80 rounded flex items-center justify-center overflow-hidden">
                                         {result.favicon ? (
                                           <Image
-                                            src={result.favicon}
+                                            src={normalizeImageUrl(result.favicon)}
                                             alt=""
                                             width={12}
                                             height={12}
@@ -394,7 +398,7 @@ export function ChatInterface({ messages, sources, followUpQuestions, searchStat
                         <div key={index} className="w-5 h-5 bg-white dark:bg-zinc-700 rounded-full flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-600">
                           {result.favicon ? (
                             <Image
-                              src={result.favicon}
+                              src={normalizeImageUrl(result.favicon)}
                               alt=""
                               width={16}
                               height={16}
@@ -433,7 +437,7 @@ export function ChatInterface({ messages, sources, followUpQuestions, searchStat
                     {result.image && (
                       <div className="absolute inset-0">
                         <Image
-                          src={result.image}
+                          src={normalizeImageUrl(result.image)}
                           alt=""
                           fill
                           sizes="(max-width: 640px) 20vw, (max-width: 1024px) 16vw, 12vw"
@@ -456,7 +460,7 @@ export function ChatInterface({ messages, sources, followUpQuestions, searchStat
                         <div className="flex-shrink-0 w-4 h-4 bg-white/80 dark:bg-zinc-700/80 rounded flex items-center justify-center overflow-hidden">
                           {result.favicon ? (
                             <Image
-                              src={result.favicon}
+                              src={normalizeImageUrl(result.favicon)}
                               alt=""
                               width={12}
                               height={12}

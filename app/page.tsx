@@ -40,6 +40,14 @@ export default function FireplexityPage() {
   const [, setIsCheckingEnv] = useState<boolean>(true)
   const [pendingQuery, setPendingQuery] = useState<string>('')
 
+  // Debug logging for component state
+  console.log('🔑 FireplexityPage state:', { 
+    hasApiKey, 
+    firecrawlApiKey: !!firecrawlApiKey, 
+    hasSearched,
+    showApiKeyModal 
+  })
+
   const { messages, input, handleInputChange, handleSubmit, isLoading, data } = useChat({
     api: '/api/fireplexity/search',
     body: {
@@ -116,23 +124,34 @@ export default function FireplexityPage() {
   useEffect(() => {
     const checkApiKey = async () => {
       try {
+        console.log('🔍 Checking API keys...')
         const response = await fetch('/api/fireplexity/check-env')
         const data = await response.json()
+        console.log('🔑 API key check response:', data)
         
-        if (data.hasFirecrawlKey) {
+        if (data.hasFirecrawlKey && data.hasOpenAIKey) {
+          console.log('✅ Both API keys found, enabling search!')
           setHasApiKey(true)
         } else {
+          console.log('❌ Missing API keys:', { 
+            hasFirecrawl: data.hasFirecrawlKey, 
+            hasOpenAI: data.hasOpenAIKey 
+          })
           // Check localStorage for user's API key
           const storedKey = localStorage.getItem('firecrawl-api-key')
           if (storedKey) {
+            console.log('📦 Found stored API key, enabling search!')
             setFirecrawlApiKey(storedKey)
             setHasApiKey(true)
+          } else {
+            console.log('💾 No stored API key found')
           }
         }
       } catch (error) {
-        console.error('Error checking environment:', error)
+        console.error('❌ Error checking environment:', error)
       } finally {
         setIsCheckingEnv(false)
+        console.log('🏁 Environment check completed')
       }
     }
     
@@ -217,103 +236,116 @@ export default function FireplexityPage() {
   const isChatActive = hasSearched || messages.length > 0
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header with logo - matching other pages */}
-      <header className="px-4 sm:px-6 lg:px-8 py-1 mt-2">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link
-            href="https://firecrawl.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image 
-              src="/firecrawl-logo-with-fire.png" 
-              alt="Firecrawl Logo" 
-              width={113} 
-              height={24}
-              className="w-[113px] h-auto"
-            />
-          </Link>
-          <Button
-            asChild
-            variant="code"
-            className="font-medium flex items-center gap-2"
-          >
-            <a 
-              href="https://github.com/mendableai/fireplexity" 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
-                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-              </svg>
-              Use this template
-            </a>
-          </Button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+      <div className="container mx-auto px-4 py-8 md:py-16 max-w-4xl">
+        {!hasSearched ? (
+          <div className="text-center space-y-8">
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <span className="text-6xl">🔍</span>
+                <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
+                  HubSpot API Search
+                </h1>
+              </div>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Get comprehensive answers about HubSpot API with verified documentation, 
+                code examples, and community insights - all with real-time citations.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 text-sm text-gray-500">
+                <span className="flex items-center gap-1">
+                  📚 Official Documentation
+                </span>
+                <span className="flex items-center gap-1">
+                  💻 Code Examples  
+                </span>
+                <span className="flex items-center gap-1">
+                  🏘️ Community Insights
+                </span>
+                <span className="flex items-center gap-1">
+                  🔗 Live Citations
+                </span>
+              </div>
+            </div>
 
-      {/* Hero section - matching other pages */}
-      <div className={`px-4 sm:px-6 lg:px-8 pt-2 pb-4 transition-all duration-500 ${isChatActive ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-[2.5rem] lg:text-[3.8rem] text-[#36322F] dark:text-white font-semibold tracking-tight leading-[1.1] opacity-0 animate-fade-up [animation-duration:500ms] [animation-delay:200ms] [animation-fill-mode:forwards]">
-            <span className="relative px-1 pb-1 text-transparent bg-clip-text bg-gradient-to-tr from-red-600 to-yellow-500 inline-flex justify-center items-center">
-              Fireplexity
-            </span>
-            <span className="block leading-[1.1] opacity-0 animate-fade-up [animation-duration:500ms] [animation-delay:400ms] [animation-fill-mode:forwards]">
-              Search & Scrape
-            </span>
-          </h1>
-          <p className="mt-3 text-lg text-zinc-600 dark:text-zinc-400 opacity-0 animate-fade-up [animation-duration:500ms] [animation-delay:600ms] [animation-fill-mode:forwards]">
-            AI-powered web search with instant results and follow-up questions
-          </p>
-        </div>
+            <div className="max-w-2xl mx-auto">
+              <SearchComponent 
+                handleSubmit={handleSearch}
+                input={input}
+                handleInputChange={handleInputChange}
+                isLoading={isLoading}
+              />
+            </div>
+
+            <div className="max-w-3xl mx-auto">
+              <div className="bg-white/50 backdrop-blur-sm rounded-xl border border-orange-200 p-6">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <span>💡</span>
+                  Try asking about:
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="space-y-2">
+                    <p className="text-gray-700">"How do I authenticate with HubSpot API?"</p>
+                    <p className="text-gray-700">"Create a contact using the Contacts API"</p>
+                    <p className="text-gray-700">"Get all deals from a specific pipeline"</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-gray-700">"Update custom properties via API"</p>
+                    <p className="text-gray-700">"HubSpot webhook integration examples"</p>
+                    <p className="text-gray-700">"Rate limiting and error handling"</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-500 mb-2">
+                Powered by <span className="font-semibold text-orange-600">Firecrawl</span> • 
+                Enhanced with <span className="font-semibold text-blue-600">OpenAI GPT-4</span>
+              </p>
+              <p className="text-xs text-gray-400">
+                Always verify official documentation for production implementations
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="text-center border-b border-gray-200 pb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-2xl">🔍</span>
+                <h1 className="text-2xl font-bold text-gray-900">HubSpot API Search</h1>
+              </div>
+              <p className="text-gray-600">Official documentation + community insights with live citations</p>
+            </div>
+
+            <div className="flex-1 px-4 sm:px-6 lg:px-8">
+              <div className="max-w-7xl mx-auto h-full">
+                {!isChatActive ? (
+                  <SearchComponent 
+                    handleSubmit={handleSearch}
+                    input={input}
+                    handleInputChange={handleInputChange}
+                    isLoading={isLoading}
+                  />
+                ) : (
+                  <ChatInterface 
+                    messages={messages}
+                    sources={sources}
+                    followUpQuestions={followUpQuestions}
+                    searchStatus={searchStatus}
+                    isLoading={isLoading}
+                    input={input}
+                    handleInputChange={handleInputChange}
+                    handleSubmit={handleChatSubmit}
+                    messageData={messageData}
+                    currentTicker={currentTicker}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Main content wrapper */}
-      <div className="flex-1 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto h-full">
-          {!isChatActive ? (
-            <SearchComponent 
-              handleSubmit={handleSearch}
-              input={input}
-              handleInputChange={handleInputChange}
-              isLoading={isLoading}
-            />
-          ) : (
-            <ChatInterface 
-              messages={messages}
-              sources={sources}
-              followUpQuestions={followUpQuestions}
-              searchStatus={searchStatus}
-              isLoading={isLoading}
-              input={input}
-              handleInputChange={handleInputChange}
-              handleSubmit={handleChatSubmit}
-              messageData={messageData}
-              currentTicker={currentTicker}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Footer - matching other pages */}
-      <footer className="px-4 sm:px-6 lg:px-8 py-8 mt-auto">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Powered by{' '}
-            <a 
-              href="https://firecrawl.dev" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-medium"
-            >
-              Firecrawl
-            </a>
-          </p>
-        </div>
-      </footer>
-      
       {/* API Key Modal */}
       <Dialog open={showApiKeyModal} onOpenChange={setShowApiKeyModal}>
         <DialogContent>

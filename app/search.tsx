@@ -12,6 +12,14 @@ interface SearchComponentProps {
 }
 
 export function SearchComponent({ handleSubmit, input, handleInputChange, isLoading }: SearchComponentProps) {
+  // Debug logging
+  console.log('🔘 SearchComponent render:', { 
+    isLoading, 
+    inputEmpty: !input.trim(), 
+    buttonDisabled: isLoading || !input.trim(),
+    inputValue: input 
+  })
+
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto pt-12">
       <div className="relative flex items-center">
